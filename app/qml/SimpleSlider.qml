@@ -22,6 +22,8 @@ import QtQuick 2.2
 import QtQuick.Controls 1.1
 import QtQuick.Layouts 1.1
 
+import "Components"
+
 RowLayout {
     property alias value: slider.value
     property alias stepSize: slider.stepSize
@@ -36,15 +38,7 @@ RowLayout {
         stepSize: parent.stepSize
         Layout.fillWidth: true
     }
-    Text{
-        id: textfield
-        text: formatNumber(Math.round(value * maxMultiplier))
-    }
-    function formatNumber(num) {
-        var n = "" + num;
-        while (n.length < 3) {
-            n = " " + n;
-        }
-        return n + "%";
+    SizedLabel{
+        text: Math.round(value * maxMultiplier) + "%"
     }
 }

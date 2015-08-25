@@ -18,11 +18,11 @@
 
 Name:       cool-retro-term
 Summary:    Cool Retro Terminal
-Version:    0.9
+Version:    1.0
 Release:    0%{?dist}
 Group:      System/X11/Terminals
-License:    GPLv3
-URL:        https://github.com/Swordifish90/cool-retro-term
+License:    GPL-3.0+
+URL:        https://github.com/Swordfish90/cool-retro-term
 
 # For this spec file to work, the cool-retro-term sources must be located
 # in a directory named cool-retro-term-0.9 (with "0.9" being the version
@@ -72,8 +72,8 @@ make %{?_smp_mflags}
 # Work around weird qmake behaviour: http://davmac.wordpress.com/2007/02/21/qts-qmake/
 make INSTALL_ROOT=%{buildroot} install
 
-desktop-file-install                                    \
---dir=${RPM_BUILD_ROOT}%{_datadir}/applications         \
+desktop-file-install                            \
+--dir=${RPM_BUILD_ROOT}%{_datadir}/applications \
 %{name}.desktop
 
 %files
@@ -82,9 +82,7 @@ desktop-file-install                                    \
 %{_bindir}/%{name}
 %{_libdir}/qt5/qml/
 %{_datadir}/applications/%{name}.desktop
-# FIXME: Icon
-# %{_datadir}/pixmaps/%{name}.png
-# %{_datadir}/icons/hicolor/*/*/*
+%{_datadir}/icons/hicolor/*/*/*
 
 %clean
 rm -rf %{buildroot}

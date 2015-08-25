@@ -22,80 +22,80 @@ import QtQuick 2.2
 import QtQuick.Controls 1.1
 import QtQuick.Layouts 1.1
 
+import "Components"
+
 Tab{
     ColumnLayout{
         anchors.fill: parent
         GroupBox{
-            title: qsTr("Rasterization Mode")
-            Layout.fillWidth: true
-            ComboBox {
-                id: rasterizationBox
-                property string selectedElement: model[currentIndex]
-                anchors.fill: parent
-                model: [qsTr("Default"), qsTr("Scanlines"), qsTr("Pixels")]
-                currentIndex: shadersettings.rasterization
-                onCurrentIndexChanged: {
-                    shadersettings.rasterization = currentIndex
-                    fontChanger.updateIndex();
-                }
-            }
-        }
-        GroupBox{
-            title: qsTr("Font") + " (" + rasterizationBox.selectedElement + ")"
-            Layout.fillWidth: true
+            property var rasterization: [qsTr("Default"), qsTr("Scanlines"), qsTr("Pixels")][appSettings.rasterization]
+            title: qsTr("Font" + "(" + rasterization + ")")
+            anchors { left: parent.left; right: parent.right }
             GridLayout{
                 anchors.fill: parent
                 columns: 2
-                Text{ text: qsTr("Name") }
+                Label{ text: qsTr("Name") }
                 ComboBox{
                     id: fontChanger
                     Layout.fillWidth: true
-                    model: shadersettings.fontlist
-                    currentIndex: updateIndex()
+                    model: appSettings.fontlist
                     onActivated: {
-                        shadersettings.fontIndexes[shadersettings.rasterization] = index;
-                        shadersettings.handleFontChanged();
+                        var name = appSettings.fontlist.get(index).name;
+                        appSettings.fontNames[appSettings.rasterization] = name;
+                        appSettings.handleFontChanged();
                     }
                     function updateIndex(){
-                        currentIndex = shadersettings.fontIndexes[shadersettings.rasterization];
+                        var name = appSettings.fontNames[appSettings.rasterization];
+                        var index = appSettings.getIndexByName(name);
+                        if (index !== undefined)
+                            currentIndex = index;
                     }
+                    Connections{
+                        target: appSettings
+                        onTerminalFontChanged: fontChanger.updateIndex();
+                    }
+                    Component.onCompleted: updateIndex();
                 }
-                Text{ text: qsTr("Scaling") }
+                Label{ text: qsTr("Scaling") }
                 RowLayout{
                     Layout.fillWidth: true
                     Slider{
                         Layout.fillWidth: true
                         id: fontScalingChanger
-                        onValueChanged: if(enabled) shadersettings.fontScaling = value
+                        onValueChanged: if(enabled) appSettings.fontScaling = value
                         stepSize: 0.05
                         enabled: false // Another trick to fix initial bad behavior.
                         Component.onCompleted: {
-                            minimumValue = 0.5;
-                            maximumValue = 2.5;
-                            value = shadersettings.fontScaling;
+                            minimumValue = appSettings.minimumFontScaling;
+                            maximumValue = appSettings.maximumFontScaling;
+                            value = appSettings.fontScaling;
                             enabled = true;
                         }
                         Connections{
-                            target: shadersettings
-                            onFontScalingChanged: fontScalingChanger.value = shadersettings.fontScaling;
+                            target: appSettings
+                            onFontScalingChanged: fontScalingChanger.value = appSettings.fontScaling;
                         }
                     }
-                    Text{
+                    SizedLabel{
                         text: Math.round(fontScalingChanger.value * 100) + "%"
                     }
                 }
-                Text{ text: qsTr("Font Width") }
+                Label{ text: qsTr("Font Width") }
                 RowLayout{
                     Layout.fillWidth: true
                     Slider{
                         Layout.fillWidth: true
                         id: widthChanger
-                        onValueChanged: shadersettings.fontWidth = value;
-                        value: shadersettings.fontWidth
+                        onValueChanged: appSettings.fontWidth = value;
+                        value: appSettings.fontWidth
                         stepSize: 0.05
-                        Component.onCompleted: minimumValue = 0.5 //Without this value gets set to 0.5
+                        Component.onCompleted: {
+                            // This is needed to avoid unnecessary chnaged events.
+                            minimumValue = 0.5;
+                            maximumValue = 1.5;
+                        }
                     }
-                    Text{
+                    SizedLabel{
                         text: Math.round(widthChanger.value * 100) + "%"
                     }
                 }
@@ -103,38 +103,38 @@ Tab{
         }
         GroupBox{
             title: qsTr("Colors")
-            Layout.fillWidth: true
+            anchors { left: parent.left; right: parent.right }
             ColumnLayout{
                 anchors.fill: parent
+                ColumnLayout{
+                    Layout.fillWidth: true
+                    CheckableSlider{
+                        name: qsTr("Chroma Color")
+                        onNewValue: appSettings.chromaColor = newValue
+                        value: appSettings.chromaColor
+                    }
+                    CheckableSlider{
+                        name: qsTr("Saturation Color")
+                        onNewValue: appSettings.saturationColor = newValue
+                        value: appSettings.saturationColor
+                        enabled: appSettings.chromaColor !== 0
+                    }
+                }
                 RowLayout{
                     Layout.fillWidth: true
                     ColorButton{
                         name: qsTr("Font")
                         height: 50
                         Layout.fillWidth: true
-                        onColorSelected: shadersettings._font_color = color;
-                        button_color: shadersettings._font_color
+                        onColorSelected: appSettings._fontColor = color;
+                        color: appSettings._fontColor
                     }
                     ColorButton{
                         name: qsTr("Background")
                         height: 50
                         Layout.fillWidth: true
-                        onColorSelected: shadersettings._background_color = color;
-                        button_color: shadersettings._background_color
-                    }
-                }
-                ColumnLayout{
-                    Layout.fillWidth: true
-                    CheckableSlider{
-                        name: qsTr("Chroma Color")
-                        onNewValue: shadersettings.chroma_color = newValue
-                        value: shadersettings.chroma_color
-                    }
-                    CheckableSlider{
-                        name: qsTr("Saturation Color")
-                        onNewValue: shadersettings.saturation_color = newValue
-                        value: shadersettings.saturation_color
-                        enabled: shadersettings.chroma_color !== 0
+                        onColorSelected: appSettings._backgroundColor = color;
+                        color: appSettings._backgroundColor
                     }
                 }
             }

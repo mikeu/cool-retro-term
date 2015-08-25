@@ -22,6 +22,8 @@ import QtQuick 2.2
 import QtQuick.Controls 1.1
 import QtQuick.Layouts 1.1
 
+import "Components"
+
 Tab{
     ColumnLayout{
         anchors.fill: parent
@@ -34,74 +36,39 @@ Tab{
                 anchors.fill: parent
                 rows: 2
                 columns: 3
-                CheckBox{
-                    property int fps: checked ? slider.value : 0
-                    onFpsChanged: shadersettings.fps = fps
-                    checked: shadersettings.fps !== 0
-                    text: qsTr("Limit FPS")
-                }
+                Label{text: qsTr("Effects FPS")}
                 Slider{
-                    id: slider
                     Layout.fillWidth: true
+                    id: fpsSlider
+                    onValueChanged: {
+                        if (enabled) {
+                            appSettings.fps = value !== 60 ? value + 1 : 0;
+                        }
+                    }
                     stepSize: 1
-                    maximumValue: 60
-                    minimumValue: 1
-                    enabled: shadersettings.fps !== 0
-                    value: shadersettings.fps !== 0 ? shadersettings.fps : 60
+                    enabled: false
+                    Component.onCompleted: {
+                        minimumValue = 0;
+                        maximumValue = 60;
+                        value = appSettings.fps !== 0 ? appSettings.fps - 1 : 60;
+                        enabled = true;
+                    }
                 }
-                Text{text: slider.value}
-                Text{text: qsTr("Texture Quality")}
+                SizedLabel{text: appSettings.fps !== 0 ? appSettings.fps : qsTr("Max")}
+                Label{text: qsTr("Texture Quality")}
                 Slider{
                     Layout.fillWidth: true
                     id: txtslider
-                    onValueChanged: shadersettings.window_scaling = value;
-                    value: shadersettings.window_scaling
-                    tickmarksEnabled: true
-                    stepSize: 0.25
-                    Component.onCompleted: minimumValue = 0.5 //Without this value gets set to 0.5
-                }
-                Text{text: Math.round(txtslider.value * 100) + "%"}
-            }
-        }
-        GroupBox{
-            title: qsTr("Rasterization")
-            Layout.fillWidth: true
-            anchors.left: parent.left
-            anchors.right: parent.right
-            GridLayout{
-                id: scanlineQualityContainer
-                anchors.fill: parent
-                columns: 3
-                property alias valsIndex: scanlineQualitySlider.value
-                property var vals: [4,3,2]
-                property var valsStrings: [
-                    qsTr("Low"),
-                    qsTr("Medium"),
-                    qsTr("High")
-                ]
-
-                onValsIndexChanged: shadersettings.scanline_quality = vals[valsIndex];
-
-                Text{text: qsTr("Scanlines Quality")}
-                Slider{
-                    id: scanlineQualitySlider
-                    Layout.fillWidth: true
-                    onValueChanged: parent.valsIndex = value;
-                    stepSize: 1
+                    onValueChanged: if (enabled) appSettings.windowScaling = value;
+                    stepSize: 0.05
+                    enabled: false
                     Component.onCompleted: {
-                        minimumValue = 0;
-                        maximumValue = 2;
-                        value = parent.vals.indexOf(shadersettings.scanline_quality);
-                    }
-                    Connections{
-                        target: shadersettings
-                        onScanline_qualityChanged:
-                            scanlineQualityContainer.valsIndex = scanlineQualityContainer.vals.indexOf(shadersettings.scanline_quality);
+                        minimumValue = 0.25 //Without this value gets set to 0.5
+                        value = appSettings.windowScaling;
+                        enabled = true;
                     }
                 }
-                Text{
-                    text: parent.valsStrings[parent.valsIndex];
-                }
+                SizedLabel{text: Math.round(txtslider.value * 100) + "%"}
             }
         }
         GroupBox{
@@ -112,37 +79,45 @@ Tab{
             GridLayout{
                 id: bloomQualityContainer
                 anchors.fill: parent
-                columns: 3
-                property alias valsIndex: bloomQualitySlider.value
-                property var vals: [0.25, 0.50, 1.00]
-                property var valsStrings: [
-                    qsTr("Low"),
-                    qsTr("Medium"),
-                    qsTr("High")
-                ]
-
-                onValsIndexChanged: shadersettings.bloom_quality = vals[valsIndex];
-
-                Text{text: qsTr("Bloom Quality")}
+                Label{text: qsTr("Bloom Quality")}
                 Slider{
-                    id: bloomQualitySlider
                     Layout.fillWidth: true
-                    onValueChanged: parent.valsIndex = value;
-                    stepSize: 1
+                    id: bloomSlider
+                    onValueChanged: if (enabled) appSettings.bloomQuality = value;
+                    stepSize: 0.05
+                    enabled: false
                     Component.onCompleted: {
-                        minimumValue = 0;
-                        maximumValue = 2;
-                        value = parent.vals.indexOf(shadersettings.bloom_quality);
-                    }
-                    Connections{
-                        target: shadersettings
-                        onBloom_qualityChanged:
-                            bloomQualityContainer.valsIndex = bloomQualityContainer.vals.indexOf(shadersettings.bloom_quality);
+                        minimumValue = 0.25
+                        value = appSettings.bloomQuality;
+                        enabled = true;
                     }
                 }
-                Text{
-                    text: parent.valsStrings[parent.valsIndex];
+                SizedLabel{text: Math.round(bloomSlider.value * 100) + "%"}
+            }
+        }
+        GroupBox{
+            title: qsTr("BurnIn")
+            Layout.fillWidth: true
+            anchors.left: parent.left
+            anchors.right: parent.right
+            GridLayout{
+                id: blurQualityContainer
+                anchors.fill: parent
+
+                Label{text: qsTr("BurnIn Quality")}
+                Slider{
+                    Layout.fillWidth: true
+                    id: burnInSlider
+                    onValueChanged: if (enabled) appSettings.burnInQuality = value;
+                    stepSize: 0.05
+                    enabled: false
+                    Component.onCompleted: {
+                        minimumValue = 0.25
+                        value = appSettings.burnInQuality;
+                        enabled = true;
+                    }
                 }
+                SizedLabel{text: Math.round(burnInSlider.value * 100) + "%"}
             }
         }
         GroupBox{
@@ -151,9 +126,9 @@ Tab{
             anchors.left: parent.left
             anchors.right: parent.right
             CheckBox{
-                checked: shadersettings._frameReflections
+                checked: appSettings._frameReflections
                 text: qsTr("Frame Reflections")
-                onCheckedChanged: shadersettings._frameReflections = checked
+                onCheckedChanged: appSettings._frameReflections = checked
             }
         }
     }

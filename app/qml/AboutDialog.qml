@@ -6,8 +6,10 @@ import QtQuick.Window 2.0
 Window{
     id: dialogwindow
     title: qsTr("About")
-    width: 450
-    height: 300
+    width: 600
+    height: 400
+
+    modality: Qt.ApplicationModal
 
     ColumnLayout{
         anchors.fill: parent
@@ -63,17 +65,21 @@ Window{
         id: defaultComponent
         ColumnLayout{
             anchors.fill: parent
-            anchors.margins: 10
             spacing: 10
-            Item{
+            Image{
+                Layout.fillWidth: true
                 Layout.fillHeight: true
+                anchors.horizontalCenter: parent.horizontalCenter
+                fillMode: Image.PreserveAspectFit
+                source: "images/crt256.png"
+                smooth: true
             }
             Text{
                 anchors.horizontalCenter: parent.horizontalCenter
                 horizontalAlignment: Text.AlignHCenter
-                text: shadersettings.version + "\n" +
+                text: appSettings.version + "\n" +
                       qsTr("Author: ") + "Filippo Scognamiglio\n" +
-                      qsTr("Email: ") + "flscogna@gmail.com\n" +
+                      qsTr("Email: ")  + "flscogna@gmail.com\n" +
                       qsTr("Source: ") + "https://github.com/Swordfish90/cool-retro-term\n"
             }
         }

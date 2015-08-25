@@ -14,15 +14,15 @@ MenuBar {
         visible: defaultMenuBar.visible
         MenuItem {action: copyAction}
         MenuItem {action: pasteAction}
-        MenuSeparator{}
+        MenuSeparator{visible: Qt.platform.os !== "osx"}
         MenuItem {action: showsettingsAction}
     }
     Menu{
         title: qsTr("View")
         visible: defaultMenuBar.visible
-        MenuItem {action: fullscreenAction}
-        MenuItem {action: showMenubarAction}
-        MenuSeparator{}
+        MenuItem {action: fullscreenAction; visible: fullscreenAction.enabled}
+        MenuItem {action: showMenubarAction; visible: showMenubarAction.enabled}
+        MenuSeparator{visible: showMenubarAction.enabled}
         MenuItem {action: zoomIn}
         MenuItem {action: zoomOut}
     }
@@ -31,12 +31,12 @@ MenuBar {
         title: qsTr("Profiles")
         visible: defaultMenuBar.visible
         Instantiator{
-            model: shadersettings.profiles_list
+            model: appSettings.profilesList
             delegate: MenuItem {
                 text: model.text
                 onTriggered: {
-                    shadersettings.loadProfileString(obj_string);
-                    shadersettings.handleFontChanged();
+                    appSettings.loadProfileString(obj_string);
+                    appSettings.handleFontChanged();
                 }
             }
             onObjectAdded: profilesMenu.insertItem(index, object)

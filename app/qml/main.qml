@@ -33,104 +33,95 @@ ApplicationWindow{
 
     visible: true
 
-    property bool fullscreen: shadersettings.fullscreen
+    property bool fullscreen: appSettings.fullscreen
     onFullscreenChanged: visibility = (fullscreen ? Window.FullScreen : Window.Windowed)
 
-    //Workaround: if menubar is assigned ugly margins are visible.
-    menuBar: shadersettings.showMenubar ? defaultMenuBar : null
+    //Workaround: Without __contentItem a ugly thin border is visible.
+    menuBar: CRTMainMenuBar{
+        id: mainMenu
+        visible: (Qt.platform.os === "osx" || appSettings.showMenubar)
+        __contentItem.visible: mainMenu.visible
+    }
 
     color: "#00000000"
-    title: qsTr("cool-retro-term")
+    title: terminalContainer.title || qsTr("cool-retro-term")
 
     Action {
         id: showMenubarAction
         text: qsTr("Show Menubar")
+        enabled: Qt.platform.os !== "osx"
+        shortcut: "Ctrl+Shift+M"
         checkable: true
-        checked: shadersettings.showMenubar
-        onTriggered: shadersettings.showMenubar = !shadersettings.showMenubar
+        checked: appSettings.showMenubar
+        onTriggered: appSettings.showMenubar = !appSettings.showMenubar
     }
     Action {
         id: fullscreenAction
         text: qsTr("Fullscreen")
+        enabled: Qt.platform.os !== "osx"
         shortcut: "Alt+F11"
-        onTriggered: shadersettings.fullscreen = !shadersettings.fullscreen;
+        onTriggered: appSettings.fullscreen = !appSettings.fullscreen;
         checkable: true
-        checked: shadersettings.fullscreen
+        checked: appSettings.fullscreen
     }
     Action {
         id: quitAction
         text: qsTr("Quit")
         shortcut: "Ctrl+Shift+Q"
-        onTriggered: terminalWindow.close();
+        onTriggered: Qt.quit();
     }
     Action{
         id: showsettingsAction
         text: qsTr("Settings")
-        onTriggered: settingswindow.show();
+        onTriggered: {
+            settingswindow.show();
+            settingswindow.requestActivate();
+            settingswindow.raise();
+        }
     }
     Action{
         id: copyAction
         text: qsTr("Copy")
-        shortcut: "Ctrl+Shift+C"
-        onTriggered: terminal.copyClipboard()
+        shortcut: Qt.platform.os === "osx" ? StandardKey.Copy : "Ctrl+Shift+C"
     }
     Action{
         id: pasteAction
         text: qsTr("Paste")
-        shortcut: "Ctrl+Shift+V"
-        onTriggered: terminal.pasteClipboard()
+        shortcut: Qt.platform.os === "osx" ? StandardKey.Paste : "Ctrl+Shift+V"
     }
     Action{
         id: zoomIn
         text: qsTr("Zoom In")
         shortcut: "Ctrl++"
-        onTriggered: shadersettings.incrementScaling();
+        onTriggered: appSettings.incrementScaling();
     }
     Action{
         id: zoomOut
         text: qsTr("Zoom Out")
         shortcut: "Ctrl+-"
-        onTriggered: shadersettings.decrementScaling();
+        onTriggered: appSettings.decrementScaling();
     }
     Action{
         id: showAboutAction
         text: qsTr("About")
         onTriggered: {
             aboutDialog.show();
+            aboutDialog.requestActivate();
+            aboutDialog.raise();
         }
-    }
-    CRTMainMenuBar{
-        id: defaultMenuBar
     }
     ApplicationSettings{
-        id: shadersettings
+        id: appSettings
     }
-    TimeManager{
-        id: timeManager
-        enableTimer: terminalWindow.visible
-    }
-    Item{
-        id: maincontainer
-        anchors.centerIn: parent
-        width: parent.width * shadersettings.window_scaling
-        height: parent.height * shadersettings.window_scaling
-        scale: 1.0 / shadersettings.window_scaling
-        opacity: shadersettings.windowOpacity * 0.3 + 0.7
+    TerminalContainer{
+        id: terminalContainer
+        y: appSettings.showMenubar ? 0 : -2 // Workaroud to hide the margin in the menubar.
+        width: parent.width * appSettings.windowScaling
+        height: (parent.height + Math.abs(y)) * appSettings.windowScaling
 
-        Loader{
-            id: frame
-            anchors.fill: parent
-            z: 2.1
-            source: shadersettings.frame_source
-        }
-        PreprocessedTerminal{
-            id: terminal
-            anchors.fill: parent
-        }
-        ShaderTerminal{
-            id: shadercontainer
-            anchors.fill: parent
-            z: 1.9
+        transform: Scale {
+            xScale: 1 / appSettings.windowScaling
+            yScale: 1 / appSettings.windowScaling
         }
     }
     SettingsWindow{
@@ -142,13 +133,18 @@ ApplicationWindow{
         visible: false
     }
     Loader{
-        id: sizeoverlayloader
-        z: 3
         anchors.centerIn: parent
-        active: shadersettings.show_terminal_size
+        active: appSettings.showTerminalSize
         sourceComponent: SizeOverlay{
-            terminalSize: terminal.terminalSize
+            z: 3
+            terminalSize: terminalContainer.terminalSize
         }
     }
-    Component.onCompleted: shadersettings.handleFontChanged();
+    Component.onCompleted: appSettings.handleFontChanged();
+    onClosing: {
+        // OSX Since we are currently supporting only one window
+        // quit the application when it is closed.
+        if (Qt.platform.os === "osx")
+            Qt.quit()
+    }
 }

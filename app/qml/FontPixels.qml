@@ -20,45 +20,80 @@
 
 import QtQuick 2.2
 
-Item{
+QtObject{
     property int selectedFontIndex
     property real scaling
-    property alias fontlist: fontlist
     property var _font: fontlist.get(selectedFontIndex)
     property var source: _font.source
     property int pixelSize: _font.pixelSize
     property int lineSpacing: _font.lineSpacing
     property real screenScaling: scaling * _font.baseScaling
+    property real defaultFontWidth: fontlist.get(selectedFontIndex).fontWidth
+    property bool lowResolutionFont: true
 
-    ListModel{
-        id: fontlist
+    property ListModel fontlist: ListModel{
         ListElement{
+            name: "COMMODORE_PET"
             text: "Commodore PET (1977)"
             source: "fonts/1977-commodore-pet/COMMODORE_PET.ttf"
             lineSpacing: 2
             pixelSize: 8
             baseScaling: 4.0
+            fontWidth: 0.8
         }
         ListElement{
+            name: "PROGGY_TINY"
+            text: "Proggy Tiny (Modern)"
+            source: "fonts/modern-proggy-tiny/ProggyTiny.ttf"
+            lineSpacing: 1
+            pixelSize: 16
+            baseScaling: 4.0
+            fontWidth: 0.9
+        }
+        ListElement{
+            name: "TERMINUS_SCALED"
+            text: "Terminus (Modern)"
+            source: "fonts/modern-terminus/TerminusTTF-4.38.2.ttf"
+            lineSpacing: 1
+            pixelSize: 12
+            baseScaling: 3.0
+            fontWidth: 1.0
+        }
+        ListElement{
+            name: "PRO_FONT_SCALED"
+            text: "Pro Font (Modern)"
+            source: "fonts/modern-pro-font-win-tweaked/ProFontWindows.ttf"
+            lineSpacing: 1
+            pixelSize: 12
+            baseScaling: 3.0
+            fontWidth: 1.0
+        }
+        ListElement{
+            name: "APPLE_II"
             text: "Apple ][ (1977)"
             source: "fonts/1977-apple2/PrintChar21.ttf"
             lineSpacing: 2
             pixelSize: 8
             baseScaling: 4.0
+            fontWidth: 0.9
         }
         ListElement{
+            name: "ATARI_400"
             text: "Atari 400-800 (1979)"
             source: "fonts/1979-atari-400-800/ATARI400800_original.TTF"
             lineSpacing: 3
             pixelSize: 8
             baseScaling: 4.0
+            fontWidth: 0.8
         }
         ListElement{
+            name: "COMMODORE_64"
             text: "Commodore 64 (1982)"
-            source: "fonts/1982-commodore64/C64_User_Mono_v1.0-STYLE.ttf"
+            source: "fonts/1982-commodore64/C64_Pro_Mono_v1.0-STYLE.ttf"
             lineSpacing: 3
             pixelSize: 8
             baseScaling: 4.0
+            fontWidth: 0.8
         }
     }
 }
